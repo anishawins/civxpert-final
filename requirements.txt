@@ -1,0 +1,9 @@
+flask
+flask-sqlalchemy
+transformers
+torch
+rapidfuzz
+scikit-learn
+accelerate
+datasets
+pandas

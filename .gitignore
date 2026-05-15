@@ -1,0 +1,8 @@
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+logs/
+data/priority_master.csv
+models/priority_bert/model.safetensors
