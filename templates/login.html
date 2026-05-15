@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>CivXpert - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #111827; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+        .card { background: #1f2937; padding: 2rem; border-radius: 1rem; width: 380px; box-shadow: 0 0 30px rgba(0,0,0,0.5); }
+        h1 { color: #22d3ee; text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem; }
+        label { color: #9ca3af; font-size: 0.85rem; display: block; margin-bottom: 0.3rem; }
+        input { width: 100%; padding: 0.6rem; border-radius: 0.5rem; background: #374151; color: white; border: 1px solid #4b5563; margin-bottom: 1rem; font-size: 1rem; }
+        input:focus { outline: none; border-color: #22d3ee; }
+        button { width: 100%; background: #06b6d4; color: white; font-weight: bold; padding: 0.6rem; border: none; border-radius: 0.5rem; cursor: pointer; font-size: 1rem; }
+        button:hover { background: #0891b2; }
+        .footer { text-align: center; margin-top: 1rem; color: #6b7280; font-size: 0.85rem; }
+        .footer a { color: #22d3ee; text-decoration: none; }
+        .error { color: #f87171; text-align: center; margin-bottom: 1rem; font-size: 0.9rem; }
+    </style>
 </head>
-<body class="bg-gray-900 min-h-screen flex items-center justify-center">
-    <div class="bg-gray-800 p-8 rounded-2xl shadow-xl w-96">
-        <h1 class="text-3xl font-bold text-cyan-400 text-center mb-6">🔒 Login to CivXpert</h1>
-        {% if error %}
-        <p class="text-red-400 text-center mb-4">{{ error }}</p>
-        {% endif %}
+<body>
+    <div class="card">
+        <h1>🔒 Login to CivXpert</h1>
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
         <form method="POST">
-            <label class="text-gray-300 text-sm">Username</label>
-            <input name="username" type="text" required
-                class="w-full mt-1 mb-4 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-cyan-400"/>
-            <label class="text-gray-300 text-sm">Password</label>
-            <input name="password" type="password" required
-                class="w-full mt-1 mb-6 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-cyan-400"/>
-            <button type="submit"
-                class="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 rounded-lg transition">
-                Login
-            </button>
+            <label>Username</label>
+            <input name="username" type="text" required/>
+            <label>Password</label>
+            <input name="password" type="password" required/>
+            <button type="submit">Login</button>
         </form>
-        <p class="text-gray-400 text-center mt-4 text-sm">
-            No account? <a href="/register" class="text-cyan-400 hover:underline">Register</a>
-        </p>
+        <p class="footer">No account? <a href="/register">Register</a></p>
     </div>
 </body>
 </html>

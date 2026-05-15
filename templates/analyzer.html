@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CivXpert - Dashboard</title>
+    <title>CivXpert - Complaint Analyzer</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #111827; color: white; font-family: sans-serif; padding: 2rem; }
         .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
         h1 { color: #22d3ee; font-size: 1.8rem; font-weight: bold; }
         h2 { color: #67e8f9; font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
-        .card { background: #1f2937; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
+        .card { background: #1f2937; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; max-width: 700px; }
         .card.highlight { border: 1px solid #22d3ee; }
         textarea { width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: #374151; color: white; border: 1px solid #4b5563; font-size: 1rem; resize: vertical; }
         textarea:focus { outline: none; border-color: #22d3ee; }
@@ -22,36 +22,28 @@
         .high { color: #f87171; }
         .medium { color: #fbbf24; }
         .low { color: #34d399; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { text-align: left; padding: 0.5rem; color: #9ca3af; border-bottom: 1px solid #374151; }
-        td { padding: 0.5rem; border-bottom: 1px solid #374151; }
-        .nav a { color: #22d3ee; text-decoration: none; margin-left: 1rem; font-size: 0.9rem; }
-        .nav a.logout { color: #f87171; }
-        .empty { color: #6b7280; }
-        .del { color: #f87171; text-decoration: none; font-size: 0.8rem; }
+        a { color: #22d3ee; text-decoration: none; font-size: 0.9rem; }
+        p.sub { color: #9ca3af; margin-bottom: 1rem; font-size: 0.9rem; }
     </style>
 </head>
 <body>
-    <div style="max-width:900px; margin:auto;">
+    <div style="max-width:700px; margin:auto;">
         <div class="topbar">
-            <h1>🧠 CivXpert Dashboard</h1>
-            <div class="nav">
-                <a href="/analyzer">Complaint Analyzer</a>
-                <a href="/logout" class="logout">Logout</a>
-            </div>
+            <h1>🧠 Complaint Analyzer</h1>
+            <a href="/login">Login</a>
         </div>
+        <p class="sub">Enter your complaint below and let AI classify it automatically:</p>
 
         <div class="card">
-            <h2>Submit a Complaint</h2>
             <form method="POST">
-                <textarea name="complaint" rows="4" required placeholder="Describe your complaint..."></textarea>
-                <button type="submit">Submit Complaint</button>
+                <textarea name="complaint" rows="5" required placeholder="Describe your complaint..."></textarea>
+                <button type="submit">Analyze Complaint</button>
             </form>
         </div>
 
         {% if result %}
         <div class="card highlight">
-            <h2>✅ Result</h2>
+            <h2>📊 Analysis Result</h2>
             <div class="grid">
                 <div class="stat"><div class="stat-label">Category</div><div class="stat-val">{{ result.category }}</div></div>
                 <div class="stat"><div class="stat-label">Department</div><div class="stat-val">{{ result.department }}</div></div>
@@ -64,29 +56,6 @@
             </div>
         </div>
         {% endif %}
-
-        <div class="card">
-            <h2>📋 My Complaints</h2>
-            {% if complaints %}
-            <table>
-                <thead><tr><th>Complaint</th><th>Department</th><th>Priority</th><th></th></tr></thead>
-                <tbody>
-                {% for c in complaints %}
-                <tr>
-                    <td>{{ c.text[:55] }}...</td>
-                    <td>{{ c.department }}</td>
-                    <td class="{% if c.priority == 'High' %}high{% elif c.priority == 'Medium' %}medium{% else %}low{% endif %}">
-                        {% if c.priority == 'High' %}🔴{% elif c.priority == 'Medium' %}🟡{% else %}🟢{% endif %} {{ c.priority }}
-                    </td>
-                    <td><a href="/delete/{{ c.id }}" class="del" onclick="return confirm('Delete?')">🗑️</a></td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="empty">No complaints submitted yet.</p>
-            {% endif %}
-        </div>
     </div>
 </body>
 </html>

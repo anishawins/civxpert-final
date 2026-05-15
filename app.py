@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from models import db, User, Complaint
 from router_system import route_complaint, predict_priority
 
@@ -48,7 +48,7 @@ def dashboard():
     if request.method == "POST":
         text = request.form["complaint"]
         department, category = route_complaint(text)
-        priority = predict_priority(text)
+        priority, confidence = predict_priority(text)
         complaint = Complaint(
             text=text,
             category=category,
@@ -58,9 +58,29 @@ def dashboard():
         )
         db.session.add(complaint)
         db.session.commit()
-        result = {"department": department, "category": category, "priority": priority}
+        result = {
+            "department": department,
+            "category": category,
+            "priority": priority,
+            "confidence": confidence
+        }
     complaints = Complaint.query.filter_by(username=session["user"]).all()
     return render_template("dashboard.html", result=result, complaints=complaints)
+
+@app.route("/analyzer", methods=["GET", "POST"])
+def analyzer():
+    result = None
+    if request.method == "POST":
+        text = request.form["complaint"]
+        department, category = route_complaint(text)
+        priority, confidence = predict_priority(text)
+        result = {
+            "department": department,
+            "category": category,
+            "priority": priority,
+            "confidence": confidence
+        }
+    return render_template("analyzer.html", result=result)
 
 @app.route("/authority")
 def authority_dashboard():
@@ -68,9 +88,12 @@ def authority_dashboard():
         return redirect(url_for("login"))
     complaints = Complaint.query.all()
     dept_counts = {}
+    priority_counts = {"High": 0, "Medium": 0, "Low": 0}
     for c in complaints:
         dept_counts[c.department] = dept_counts.get(c.department, 0) + 1
-    return render_template("authority.html", complaints=complaints, dept_counts=dept_counts)
+        if c.priority in priority_counts:
+            priority_counts[c.priority] += 1
+    return render_template("authority.html", complaints=complaints, dept_counts=dept_counts, priority_counts=priority_counts)
 
 @app.route("/logout")
 def logout():
@@ -84,3 +107,13 @@ if __name__ == "__main__":
             db.session.add(User(username="officer1", password="admin123", role="authority"))
             db.session.commit()
     app.run(debug=True)
+
+@app.route("/delete/<int:complaint_id>")
+def delete_complaint(complaint_id):
+    if "user" not in session:
+        return redirect(url_for("login"))
+    complaint = Complaint.query.get(complaint_id)
+    if complaint and complaint.username == session["user"]:
+        db.session.delete(complaint)
+        db.session.commit()
+    return redirect(url_for("dashboard"))

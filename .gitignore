@@ -1,8 +1,6 @@
-venv/
+data/*.zip
+data/civiccomp/
+data/civicdex/
+models/
 __pycache__/
 *.pyc
-*.db
-.env
-logs/
-data/priority_master.csv
-models/priority_bert/model.safetensors
