@@ -1,29 +1,25 @@
 import os
 from datetime import datetime
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from models import db, User, Complaint
 from router_system import route_complaint, predict_priority
-
+from services.duplicate_detector import ComplaintSimilarity
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-me")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///civxpert.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
+similarity = ComplaintSimilarity(threshold=0.55)
 
 
 def analyze(text):
     department, category = route_complaint(text)
     priority, confidence = predict_priority(text)
-    return {
-        "department": department,
-        "category": category,
-        "priority": priority,
-        "confidence": confidence,
-    }
+    return {"department": department, "category": category, "priority": priority, "confidence": confidence}
 
 
 def current_user():
@@ -75,28 +71,24 @@ def dashboard():
         return redirect(url_for("login"))
 
     result = None
+    similar = []
     if request.method == "POST":
         text = request.form.get("complaint", "").strip()
         if not text:
-            return render_template("dashboard.html", result=None, complaints=[], error="Please describe your complaint.")
+            return render_template("dashboard.html", result=None, complaints=[], similar=[], error="Please describe your complaint.")
         if len(text) > 2000:
-            return render_template("dashboard.html", result=None, complaints=[], error="Complaint must be under 2000 characters.")
+            return render_template("dashboard.html", result=None, complaints=[], similar=[], error="Complaint must be under 2000 characters.")
 
         result = analyze(text)
-        complaint = Complaint(
-            text=text,
-            category=result["category"],
-            department=result["department"],
-            priority=result["priority"],
-            priority_confidence=result["confidence"],
-            username=session["user"],
-        )
+        similar = similarity.find_similar(text, Complaint.query.order_by(Complaint.created_at.desc()).limit(500).all())
+        complaint = Complaint(text=text, category=result["category"], department=result["department"],
+                              priority=result["priority"], priority_confidence=result["confidence"], username=session["user"])
         db.session.add(complaint)
         db.session.commit()
         result["reference"] = complaint.reference
 
     complaints = Complaint.query.filter_by(username=session["user"]).order_by(Complaint.created_at.desc()).all()
-    return render_template("dashboard.html", result=result, complaints=complaints)
+    return render_template("dashboard.html", result=result, complaints=complaints, similar=similar)
 
 
 @app.route("/analyzer", methods=["GET", "POST"])
@@ -113,24 +105,33 @@ def analyzer():
 def authority_dashboard():
     if session.get("role") != "authority":
         return redirect(url_for("login"))
+    query = request.args.get("q", "").strip()
+    status = request.args.get("status", "").strip()
+    priority = request.args.get("priority", "").strip()
+    department = request.args.get("department", "").strip()
+    complaints_query = Complaint.query
+    if query:
+        complaints_query = complaints_query.filter(Complaint.text.ilike(f"%{query}%"))
+    if status:
+        complaints_query = complaints_query.filter_by(status=status)
+    if priority:
+        complaints_query = complaints_query.filter_by(priority=priority)
+    if department:
+        complaints_query = complaints_query.filter_by(department=department)
+    complaints = complaints_query.order_by(Complaint.created_at.desc()).all()
 
-    complaints = Complaint.query.order_by(Complaint.created_at.desc()).all()
-    dept_counts = {}
-    priority_counts = {"High": 0, "Medium": 0, "Low": 0}
+    all_complaints = Complaint.query.all()
+    dept_counts, priority_counts = {}, {"High": 0, "Medium": 0, "Low": 0}
     status_counts = {}
-    for complaint in complaints:
+    for complaint in all_complaints:
         dept_counts[complaint.department] = dept_counts.get(complaint.department, 0) + 1
         if complaint.priority in priority_counts:
             priority_counts[complaint.priority] += 1
         status_counts[complaint.status] = status_counts.get(complaint.status, 0) + 1
-
-    return render_template(
-        "authority.html",
-        complaints=complaints,
-        dept_counts=dept_counts,
-        priority_counts=priority_counts,
-        status_counts=status_counts,
-    )
+    departments = sorted(d for d in dept_counts if d)
+    return render_template("authority.html", complaints=complaints, dept_counts=dept_counts,
+                           priority_counts=priority_counts, status_counts=status_counts,
+                           departments=departments, filters={"q": query, "status": status, "priority": priority, "department": department})
 
 
 @app.route("/authority/complaint/<int:complaint_id>/status", methods=["POST"])
@@ -138,16 +139,15 @@ def update_status(complaint_id):
     if session.get("role") != "authority":
         return redirect(url_for("login"))
     complaint = db.session.get(Complaint, complaint_id)
-    allowed = {"Submitted", "Under Review", "In Progress", "Resolved"}
     status = request.form.get("status")
-    if complaint and status in allowed:
+    if complaint and status in {"Submitted", "Under Review", "In Progress", "Resolved"}:
         complaint.status = status
         complaint.updated_at = datetime.utcnow()
         db.session.commit()
-    return redirect(url_for("authority_dashboard"))
+    return redirect(request.referrer or url_for("authority_dashboard"))
 
 
-@app.route("/delete/<int:complaint_id>", methods=["POST", "GET"])
+@app.route("/delete/<int:complaint_id>", methods=["POST"])
 def delete_complaint(complaint_id):
     if session.get("role") != "public":
         return redirect(url_for("login"))
@@ -169,11 +169,7 @@ if __name__ == "__main__":
         db.create_all()
         officer = User.query.filter_by(username="officer1").first()
         if not officer:
-            officer = User(
-                username="officer1",
-                password=generate_password_hash(os.environ.get("AUTHORITY_PASSWORD", "admin123")),
-                role="authority",
-            )
+            officer = User(username="officer1", password=generate_password_hash(os.environ.get("AUTHORITY_PASSWORD", "admin123")), role="authority")
             db.session.add(officer)
             db.session.commit()
     app.run(debug=os.environ.get("FLASK_DEBUG", "false").lower() == "true")
