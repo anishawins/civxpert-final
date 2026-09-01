@@ -1,92 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>CivXpert - Dashboard</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #111827; color: white; font-family: sans-serif; padding: 2rem; }
-        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
-        h1 { color: #22d3ee; font-size: 1.8rem; font-weight: bold; }
-        h2 { color: #67e8f9; font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; }
-        .card { background: #1f2937; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; }
-        .card.highlight { border: 1px solid #22d3ee; }
-        textarea { width: 100%; padding: 0.75rem; border-radius: 0.5rem; background: #374151; color: white; border: 1px solid #4b5563; font-size: 1rem; resize: vertical; }
-        textarea:focus { outline: none; border-color: #22d3ee; }
-        button { background: #06b6d4; color: white; font-weight: bold; padding: 0.6rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; margin-top: 0.75rem; font-size: 1rem; }
-        button:hover { background: #0891b2; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .stat { background: #374151; border-radius: 0.75rem; padding: 1rem; }
-        .stat-label { color: #9ca3af; font-size: 0.8rem; margin-bottom: 0.25rem; }
-        .stat-val { font-weight: bold; font-size: 1rem; }
-        .high { color: #f87171; }
-        .medium { color: #fbbf24; }
-        .low { color: #34d399; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        th { text-align: left; padding: 0.5rem; color: #9ca3af; border-bottom: 1px solid #374151; }
-        td { padding: 0.5rem; border-bottom: 1px solid #374151; }
-        .nav a { color: #22d3ee; text-decoration: none; margin-left: 1rem; font-size: 0.9rem; }
-        .nav a.logout { color: #f87171; }
-        .empty { color: #6b7280; }
-        .del { color: #f87171; text-decoration: none; font-size: 0.8rem; }
-    </style>
-</head>
-<body>
-    <div style="max-width:900px; margin:auto;">
-        <div class="topbar">
-            <h1>🧠 CivXpert Dashboard</h1>
-            <div class="nav">
-                <a href="/analyzer">Complaint Analyzer</a>
-                <a href="/logout" class="logout">Logout</a>
-            </div>
-        </div>
-
-        <div class="card">
-            <h2>Submit a Complaint</h2>
-            <form method="POST">
-                <textarea name="complaint" rows="4" required placeholder="Describe your complaint..."></textarea>
-                <button type="submit">Submit Complaint</button>
-            </form>
-        </div>
-
-        {% if result %}
-        <div class="card highlight">
-            <h2>✅ Result</h2>
-            <div class="grid">
-                <div class="stat"><div class="stat-label">Category</div><div class="stat-val">{{ result.category }}</div></div>
-                <div class="stat"><div class="stat-label">Department</div><div class="stat-val">{{ result.department }}</div></div>
-                <div class="stat"><div class="stat-label">Priority</div>
-                    <div class="stat-val {% if result.priority == 'High' %}high{% elif result.priority == 'Medium' %}medium{% else %}low{% endif %}">
-                        {% if result.priority == 'High' %}🔴{% elif result.priority == 'Medium' %}🟡{% else %}🟢{% endif %} {{ result.priority }}
-                    </div>
-                </div>
-                <div class="stat"><div class="stat-label">Confidence</div><div class="stat-val">{{ result.confidence }}%</div></div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="card">
-            <h2>📋 My Complaints</h2>
-            {% if complaints %}
-            <table>
-                <thead><tr><th>Complaint</th><th>Department</th><th>Priority</th><th></th></tr></thead>
-                <tbody>
-                {% for c in complaints %}
-                <tr>
-                    <td>{{ c.text[:55] }}...</td>
-                    <td>{{ c.department }}</td>
-                    <td class="{% if c.priority == 'High' %}high{% elif c.priority == 'Medium' %}medium{% else %}low{% endif %}">
-                        {% if c.priority == 'High' %}🔴{% elif c.priority == 'Medium' %}🟡{% else %}🟢{% endif %} {{ c.priority }}
-                    </td>
-                    <td><a href="/delete/{{ c.id }}" class="del" onclick="return confirm('Delete?')">🗑️</a></td>
-                </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <p class="empty">No complaints submitted yet.</p>
-            {% endif %}
-        </div>
-    </div>
-</body>
-</html>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CivXpert — Citizen Portal</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2d;--panel2:#11243a;--line:#1c3550;--text:#edf6ff;--muted:#8ea4ba;--accent:#35d0ba;--blue:#5ea7ff;--danger:#ff6b7a;--warn:#f4c95d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#12304a 0,transparent 32%),var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.shell{max-width:1180px;margin:auto;padding:28px 22px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}.brand{display:flex;gap:12px;align-items:center}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--blue));display:grid;place-items:center;color:#04111c;font-weight:900}.brand h1{font-size:21px;margin:0}.brand p{margin:3px 0 0;color:var(--muted);font-size:12px}.nav{display:flex;gap:10px;align-items:center}.nav a{color:var(--text);text-decoration:none;border:1px solid var(--line);padding:9px 13px;border-radius:9px;font-size:13px}.nav a:hover{border-color:#315678}.nav .logout{color:#ff9aa5}.hero{margin-bottom:20px}.eyebrow{color:var(--accent);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.hero h2{font-size:32px;line-height:1.15;margin:7px 0}.hero p{color:var(--muted);max-width:680px}.card{background:rgba(13,27,45,.92);border:1px solid var(--line);border-radius:17px;padding:22px;margin-bottom:18px;box-shadow:0 14px 45px rgba(0,0,0,.16)}.card h3{margin:0 0 7px;font-size:16px}.sub{color:var(--muted);font-size:13px;margin:0 0 16px}textarea{width:100%;min-height:140px;resize:vertical;background:#081624;color:var(--text);border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;outline:none}textarea:focus{border-color:#3979a8;box-shadow:0 0 0 3px rgba(94,167,255,.08)}.composer{position:relative}.counter{position:absolute;right:12px;bottom:10px;color:#637b92;font-size:11px}button{border:0;border-radius:10px;background:linear-gradient(135deg,var(--accent),#31a8e9);color:#04111c;font-weight:800;padding:11px 18px;margin-top:12px;cursor:pointer}button:hover{filter:brightness(1.07)}.error{border:1px solid #6e2c3a;background:#321923;color:#ffadb7;padding:11px;border-radius:10px;margin-bottom:14px;font-size:13px}.result{border-color:#245c64;background:linear-gradient(145deg,rgba(18,51,66,.8),rgba(13,27,45,.95))}.result-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}.success{color:var(--accent);font-weight:800;font-size:13px}.ref{color:var(--muted);font-size:12px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px}.label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.value{font-weight:750;margin-top:5px;font-size:14px}.high{color:var(--danger)}.medium{color:var(--warn)}.low{color:#61e6a7}.confidence{height:5px;background:#193149;border-radius:5px;margin-top:9px;overflow:hidden}.confidence i{display:block;height:100%;background:var(--accent);width:{{ result.confidence|default(0) }}%}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.07em;padding:11px;border-bottom:1px solid var(--line)}td{padding:13px 11px;border-bottom:1px solid rgba(28,53,80,.65);vertical-align:top}.complaint-text{max-width:460px;color:#dbe8f4}.pill{display:inline-flex;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:700;background:#132a40;border:1px solid var(--line)}.empty{text-align:center;color:var(--muted);padding:25px}.delete{color:#ff8995;text-decoration:none;font-size:11px}.status{color:#9bd7ff}.footer{color:#617991;font-size:11px;text-align:center;padding:15px}
+@media(max-width:760px){.topbar,.result-head{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr 1fr}.hero h2{font-size:26px}}
+</style>
+</head><body><main class="shell">
+<header class="topbar"><div class="brand"><div class="logo">CX</div><div><h1>CivXpert</h1><p>AI-powered civic grievance intelligence</p></div></div><nav class="nav"><a href="/analyzer">AI Analyzer</a><a class="logout" href="/logout">Sign out</a></nav></header>
+<section class="hero"><div class="eyebrow">Citizen Portal</div><h2>Make your city heard.</h2><p>Describe a civic issue in natural language. CivXpert analyzes it, identifies the responsible department, and estimates urgency automatically.</p></section>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<section class="card"><h3>Submit a civic complaint</h3><p class="sub">Include useful details such as location, severity, and what you observed.</p><form method="POST"><div class="composer"><textarea id="complaint" name="complaint" maxlength="2000" required placeholder="Example: The streetlights on 2nd Cross have been out for three nights, making the road unsafe after dark."></textarea><span class="counter"><span id="count">0</span>/2000</span></div><button type="submit">Analyze &amp; Submit →</button></form></section>
+{% if result %}<section class="card result"><div class="result-head"><div><div class="success">✓ Complaint successfully analyzed</div><h3 style="margin-top:5px">Routing decision</h3><p class="sub">The NLP pipeline classified your complaint and assigned an operational priority.</p></div><div class="ref">Reference <strong>{{ result.reference }}</strong></div></div><div class="grid"><div class="stat"><div class="label">Category</div><div class="value">{{ result.category }}</div></div><div class="stat"><div class="label">Department</div><div class="value">{{ result.department }}</div></div><div class="stat"><div class="label">Priority</div><div class="value {% if result.priority=='High' %}high{% elif result.priority=='Medium' %}medium{% else %}low{% endif %}">{{ result.priority }}</div></div><div class="stat"><div class="label">AI confidence</div><div class="value">{{ result.confidence }}%</div><div class="confidence"><i></i></div></div></div></section>{% endif %}
+<section class="card"><h3>My complaints</h3><p class="sub">Track every complaint submitted from this account.</p>{% if complaints %}<div class="table-wrap"><table><thead><tr><th>Reference</th><th>Complaint</th><th>Department</th><th>Priority</th><th>Status</th><th></th></tr></thead><tbody>{% for c in complaints %}<tr><td><span class="pill">{{ c.reference }}</span></td><td class="complaint-text">{{ c.text[:100] }}{% if c.text|length>100 %}…{% endif %}</td><td>{{ c.department }}</td><td class="{% if c.priority=='High' %}high{% elif c.priority=='Medium' %}medium{% else %}low{% endif %}">{{ c.priority }}</td><td class="status">{{ c.status }}</td><td><a class="delete" href="/delete/{{ c.id }}" onclick="return confirm('Delete this complaint?')">Delete</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty">No complaints yet. Your submitted issues will appear here.</div>{% endif %}</section><div class="footer">CivXpert • Intelligent civic issue triage</div></main><script>const box=document.getElementById('complaint'),count=document.getElementById('count');if(box){const update=()=>count.textContent=box.value.length;box.addEventListener('input',update);update()}</script></body></html>
